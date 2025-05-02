@@ -9,14 +9,20 @@
 
 ####Set Up####
 library(EPATADA)
+library(readr)
 
 ####Download####
 data <- TADA_DataRetrieval(characteristicName = c('PFOA ion'
-                                                  # , 'Perfluoroctanoic acid'
+                                                  , 'Perfluorooctanoic acid'
                                                   # , 'PERFLUOROOCTANOIC ACID'
                                                   ,'Perfluorooctanesulfonate'
                                                   , 'Perfluorooctane sulfonic acid'
                                                   # , 'Potassium perfluorooctanesulfonate'
                                                   , 'Perfluorooctanesulfonate (PFOS)'
                                                   # , 'POTASSIUM PERFLUOROOCTANESULFONATE'
-                                                  ))
+                                                  ),
+                           applyautoclean = T)
+
+
+####Export####
+write_csv(data, 'output/data_pull.csv')
