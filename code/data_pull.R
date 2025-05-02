@@ -9,7 +9,7 @@
 
 ####Set Up####
 library(EPATADA)
-library(readr)
+library(tidyverse)
 
 ####Download####
 data <- TADA_DataRetrieval(characteristicName = c('PFOA ion'
@@ -21,8 +21,13 @@ data <- TADA_DataRetrieval(characteristicName = c('PFOA ion'
                                                   , 'Perfluorooctanesulfonate (PFOS)'
                                                   # , 'POTASSIUM PERFLUOROOCTANESULFONATE'
                                                   ),
+                           sampleMedia = c('Water', 'Tissue'), 
                            applyautoclean = T)
 
 
+####Filter####
+data_filt <- data %>%
+  filter(ActivityMediaSubdivisionName == 'Surface Water')
+
 ####Export####
-write_csv(data, 'output/data_pull.csv')
+write_csv(data_filt, 'output/data_pull_SW_TISS_ONLY.csv')
