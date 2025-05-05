@@ -4,7 +4,7 @@
 
 #Written by: Hannah Ferriby, hannah.ferriby@tetratech.com
 #Date created: 2025-5-2
-#Date updated: 
+#Date updated: 2025-5-5
 
 
 ####Set Up####
@@ -26,6 +26,8 @@ data <- TADA_DataRetrieval(characteristicName = c('PFOA ion'
 
 
 ####Filter####
+unique(data$ActivityMediaSubdivisionName)
+
 data_filt <- data %>%
   filter(ActivityMediaSubdivisionName == 'Surface Water')
 
