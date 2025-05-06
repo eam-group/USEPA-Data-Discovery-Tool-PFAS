@@ -31,7 +31,10 @@ unique(data$ActivityMediaSubdivisionName)
 
 data_filt <- data %>%
   filter(ActivityMediaName %in% c('Water', 'Tissue')) %>% 
-  filter(ActivityMediaSubdivisionName == 'Surface Water')
+  filter(ActivityMediaSubdivisionName == 'Surface Water')  %>%
+  filter(!(TADA.ActivityMediaName == 'WATER' & TADA.ResultMeasure.MeasureUnitCode == 'UG/KG' &
+             !is.na(TADA.ResultMeasureValue)))
+
 
 ####Initial Map####
 all_data_2_media <- data_filt %>%
@@ -315,7 +318,7 @@ data_18 <- data_17 %>%
 summary(as.factor(data_18$EPA_method_flag))
 summary(data_18$TADA.DetectionQuantitationLimitMeasure.MeasureValue)
 
-#Export data with flags
+####Export data with flags####
 write_csv(data_18, 'output/EPATADA_Original_data_with_flags_tags.csv')
 
 #Find non-detect detection limit range
