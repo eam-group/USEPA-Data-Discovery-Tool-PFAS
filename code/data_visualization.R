@@ -278,7 +278,7 @@ table_by_state <- all_data %>%
           `Number of Samples` = n()) %>%
   unique()
 
-table_by_state_flag <- all_data %>%
+table_by_state_flag <- filtered_data %>%
   filter(!is.na(STATE_NAME)) %>%
   group_by(STATE_NAME) %>%
   reframe(STATE_NAME = STATE_NAME,
