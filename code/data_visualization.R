@@ -59,16 +59,18 @@ summary(as.factor(all_data$TADA.CensoredData.Flag))
 filtered_data <- read_csv('output/EPATADA_priority_filtered_data.csv') %>%
   mutate(StateCode = as.character(StateCode)) %>%
   left_join(state_num, by = c('StateCode' = 'STATE')) %>%
-  mutate(ActivityMediaName = ifelse(ActivityMediaName == 'Biological Tissue',
-                                    'Tissue',
-                                    ActivityMediaName))
+  mutate(Abbrev.Name = case_when(TADA.CharacteristicName == "PERFLUOROOCTANOIC ACID" ~ "PFOA",
+                                 TADA.CharacteristicName == "PFOA ION" ~ "PFOA",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANESULFONATE (PFOS)" ~ "PFOS",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANESULFONATE" ~ "PFOS",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANE SULFONIC ACID" ~ "PFOS"))
 
 states <- st_read('data/cb_2018_us_state_500k/cb_2018_us_state_500k.shp') %>%
   filter(!STATEFP %in% c('60', '66', '69', '78',
                          '15', '02'))
 
 #Summary in ng/L
-data_summary_surfacewater <- all_data %>%
+data_summary_surfacewater <- filtered_data %>%
   group_by(Abbrev.Name, sample_lower_than_detection_limit_flag) %>%
   summarise(count = n(),
             Min = min(TADA.ResultMeasureValue, na.rm = TRUE)*1000,
@@ -351,7 +353,7 @@ give.n <- function(x){
 ggplot(all_data,
        aes(y = TADA.ResultMeasureValue*1000, x = Abbrev.Name, fill = sample_lower_than_detection_limit_flag,
            color = sample_lower_than_detection_limit_flag)) +
-  geom_boxplot(data = all_data,
+  geom_boxplot(data = filtered_data,
                alpha = 0.8, aes(fill = sample_lower_than_detection_limit_flag,
                                 color = sample_lower_than_detection_limit_flag), position=position_dodge(preserve="single")) +
   #geom_point(position = position_jitterdodge(jitter.width = 0.2), alpha = 0.2, size = 0.5) +
@@ -417,3 +419,4 @@ pie_table <- filt_pie %>%
          `Total Samples` = n_samples_total)
 
 write_csv(pie_table, 'output/figures/samples_by_media_by_state.csv')
+
