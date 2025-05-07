@@ -208,7 +208,7 @@ write_csv(samples_epa_region_flagged, 'output/figures/samples_epa_region_flagged
 #   filter(TADA.ActivityMediaName == 'WATER') %>%
 #   filter(TADA.ResultMeasureValueDataTypes.Flag == 'Result Value/Unit Estimated from Detection Limit')
 
-ggplot(all_data,
+ggplot(filtered_data,
        aes(x = TADA.DetectionQuantitationLimitMeasure.MeasureValue, y = TADA.ResultMeasureValue,
            color = sample_lower_than_detection_limit_flag)) +
   geom_point(alpha = 0.5, size = 1) +
@@ -235,7 +235,7 @@ ggsave('output/figures/nondetect_scatterplot.jpg',
        height = 5, width = 8, dpi = 500)
 
 #### nondetect_scatterplot FLIPPED Axis 
-ggplot(all_data,
+ggplot(filtered_data,
        aes(x = TADA.ResultMeasureValue, y = TADA.DetectionQuantitationLimitMeasure.MeasureValue,
            color = sample_lower_than_detection_limit_flag)) +
   geom_point(alpha = 0.5, size = 1) +
@@ -318,7 +318,7 @@ table_by_pfas_compounds <- all_data %>%
 
 ####Boxplots####
 
-all_data_4_plot <- all_data %>%
+all_data_4_plot <- filtered_data %>%
   mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == '1-HEPTANESULFONIC ACID, 1,1,2,2,3,3,4,4,5,5,6,6,7,7,7-PENTADECAFLUORO-' ~
                                                '1-HEPTANESULFONIC ACID,1,1,2,2,3,3,\n4,4,5,5,6,6,7,7,7-PENTADECAFLUORO-',
                                              T ~ TADA.CharacteristicName)) %>%
