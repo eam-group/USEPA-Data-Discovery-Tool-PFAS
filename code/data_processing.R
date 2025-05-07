@@ -15,7 +15,18 @@ library(scales)
 library(scatterpie)
 
 ####Data####
-data <- read_csv('output/data_pull.csv')
+data <- read_csv('output/data_pull.csv') %>%
+  mutate(Abbrev.Name = case_when(TADA.CharacteristicName == "PERFLUOROOCTANOIC ACID" ~ "PFOA",
+                                 TADA.CharacteristicName == "PFOA ION" ~ "PFOA",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANESULFONATE (PFOS)" ~ "PFOS",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANESULFONATE" ~ "PFOS",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANE SULFONIC ACID" ~ "PFOS"))
+
+data_media_sums <- data %>%
+  group_by(Abbrev.Name) %>%
+  reframe(Abbrev.Name = Abbrev.Name,
+          n = n()) %>%
+  unique()
 
 state_num <- read.table('data/state_codes.txt', header = T, sep = "|", dec = ".") %>%
   mutate(STATE = ifelse(STATE < 10, as.character(paste0('0',STATE)),
@@ -35,6 +46,11 @@ data_filt <- data %>%
   filter(!(TADA.ActivityMediaName == 'WATER' & TADA.ResultMeasure.MeasureUnitCode == 'UG/KG' &
              !is.na(TADA.ResultMeasureValue)))
 
+data_media_filt_sums <- data_filt %>%
+  group_by(Abbrev.Name) %>%
+  reframe(Abbrev.Name = Abbrev.Name,
+          n = n()) %>%
+  unique()
 
 ####Initial Map####
 all_data_2_media <- data_filt %>%
