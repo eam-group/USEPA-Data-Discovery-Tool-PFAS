@@ -329,8 +329,8 @@ table_by_pfas_compounds <- all_data %>%
 ####Boxplots####
 
 all_data_4_plot <- filtered_data %>%
-  mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == '1-HEPTANESULFONIC ACID, 1,1,2,2,3,3,4,4,5,5,6,6,7,7,7-PENTADECAFLUORO-' ~
-                                               '1-HEPTANESULFONIC ACID,1,1,2,2,3,3,\n4,4,5,5,6,6,7,7,7-PENTADECAFLUORO-',
+  mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == 'PERFLUOROOCTANESULFONATE' ~
+                                               'PERFLUOROOCTANE SULFONIC ACID', TADA.CharacteristicName == 'PFOA ION' ~ 'PERFLUOROOCTANOIC ACID',
                                              T ~ TADA.CharacteristicName)) %>%
   filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE')
 options(scipen=10000)
@@ -352,6 +352,41 @@ ggplot() +
 
 ggsave('output/figures/params_by_media_boxplot.jpg', units = 'in',
        height = 5, width = 6)
+
+
+##### tissue vs concentration 
+##make df for just MN data 
+MN_data <- all_data %>%
+  filter(STATE_NAME=='Minnesota')
+WI_data <- all_data %>%
+  filter(STATE_NAME=='Wisconsin')
+
+MN_wide <- MN_data %>% 
+  pivot_wider(
+    id_cols = c(MonitoringLocationName, ActivityStartDate, CharacteristicName, ActivityStartDateTime),
+    names_from = TADA.ActivityMediaName,
+    values_from = TADA.ResultMeasureValue,
+    #values_fn = list(ResultMeasureValue = mean),
+    values_fn=mean,
+    values_fill=NA
+  )
+
+WI_wide <- WI_data %>%
+  pivot_wider(
+   id_cols = c(MonitoringLocationName, ActivityStartDate, CharacteristicName, ActivityStartDateTime),
+    names_from = TADA.ActivityMediaName,
+    values_from = TADA.ResultMeasureValue,
+    values_fn=mean,
+    values_fill=NA
+)
+
+### MN and WI line plot 
+
+MN_fig <- ggplot(MN_wide, aes(x=WATER, y=TISSUE))+geom_point()
+MN_fig
+
+WI_fig <- ggplot(WI_wide, aes(x=WATER, y=TISSUE))+geom_point()
+WI_fig
 
 # code to generate sample sizes 
 
