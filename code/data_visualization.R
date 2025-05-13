@@ -9,6 +9,7 @@ library(tidyverse)
 library(sf)
 library(ggplot2)
 library(scales)
+library(ggpmisc)
 
 theme_set(theme_classic())
 options(scipen = 8)
@@ -408,9 +409,11 @@ MN_data <- all_data %>%
 WI_data <- all_data %>%
   filter(STATE_NAME=='Wisconsin')
 
+### ActivityStartDate ActivityStartDateTime
+
 MN_wide <- MN_data %>% 
   pivot_wider(
-    id_cols = c(MonitoringLocationName, ActivityStartDate, CharacteristicName, ActivityStartDateTime),
+    id_cols = c(MonitoringLocationName,  CharacteristicName),
     names_from = TADA.ActivityMediaName,
     values_from = TADA.ResultMeasureValue,
     #values_fn = list(ResultMeasureValue = mean),
@@ -420,7 +423,7 @@ MN_wide <- MN_data %>%
 
 WI_wide <- WI_data %>%
   pivot_wider(
-   id_cols = c(MonitoringLocationName, ActivityStartDate, CharacteristicName, ActivityStartDateTime),
+   id_cols = c(MonitoringLocationName, CharacteristicName),
     names_from = TADA.ActivityMediaName,
     values_from = TADA.ResultMeasureValue,
     values_fn=mean,
@@ -431,8 +434,22 @@ WI_wide <- WI_data %>%
 
 
 
-MN_fig <- ggplot(MN_wide, aes(x=WATER, y=TISSUE))+geom_point()
+MN_fig <- ggplot(MN_wide, aes(x=WATER, y=TISSUE))+geom_point()+
+  ggtitle("Water vs Tissue at co-sampled locations in Minnesota")+
+  xlim(0,.1)+
+  xlab("Water Concentration (ug/L)")+
+  ylab("Tissue Concentration (ug/kg)")+
+  geom_smooth(method=lm)+
+  stat_poly_eq(
+    aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")),
+    formula = y ~ x,
+    parse = TRUE
+  )
 MN_fig
+
+ggsave('output/figures/linear_regression_MN.jpg', units = 'in',
+       height = 5, width = 6)
+
 
 WI_fig <- ggplot(WI_wide, aes(x=WATER, y=TISSUE))+geom_point()
 WI_fig
