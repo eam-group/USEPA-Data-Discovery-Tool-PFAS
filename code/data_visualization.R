@@ -467,7 +467,9 @@ ggplot() +
   scale_y_log10() +
   facet_grid(rows = vars(STATE_NAME),
     cols = vars(TADA.ActivityMediaName),
-    scales = 'free_y')+
+    scales = 'free_y',
+    labeller = labeller(
+      TADA.ActivityMediaName=c("TISSUE"="Tissue (ug/kg)", "WATER"="Water (ug/L)")))+
   xlab('Characteristic Name') + 
   ylab('Sample Result Value') + 
   guides(x =guide_axis(angle = 45)) +
