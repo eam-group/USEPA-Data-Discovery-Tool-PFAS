@@ -209,7 +209,7 @@ write_csv(samples_epa_region_flagged, 'output/figures/samples_epa_region_flagged
 #   filter(TADA.ResultMeasureValueDataTypes.Flag == 'Result Value/Unit Estimated from Detection Limit')
 
 ggplot(filtered_data,
-       aes(x = TADA.DetectionQuantitationLimitMeasure.MeasureValue, y = TADA.ResultMeasureValue,
+       aes(x = TADA.DetectionQuantitationLimitMeasure.MeasureValue, y = TADA.ResultMeasureValue*1000,
            color = sample_lower_than_detection_limit_flag)) +
   geom_point(alpha = 0.5, size = 1) +
   facet_wrap(vars(Abbrev.Name), ncol = 7) +
@@ -226,7 +226,7 @@ ggplot(filtered_data,
              aes(yintercept = criteria_acute), lty = 2) +
   geom_hline(data = data_summary_surfacewater,
              aes(yintercept = criteria_chronic), lty = 2) +
-  labs(y = expression("Concentration ("*mu*"g/L)"), x = expression("MDL ("*mu*"g/L)"),
+  labs(y = expression("Concentration (ng/L)"), x = expression("MDL (ng/L)"),
        color = "Tag") +
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 45, hjust = 1, size = 7)) #+
@@ -269,6 +269,16 @@ table_by_media <- all_data %>%
   unique()
 
 write_csv(table_by_media, 'output/figures/table_by_media.csv')
+
+#####Summarize by Species#####
+table_by_species <- all_data %>%
+  filter(!is.na(SubjectTaxonomicName)) %>%
+  group_by(SubjectTaxonomicName) %>%
+  reframe(SubjectTaxonomicName = SubjectTaxonomicName, 
+          'Number of Sample' = n()) %>%
+  unique()
+
+write_csv(table_by_species, 'output/figures/table_by_species.csv')
 
 #####Summarize by State#####
 table_by_state <- all_data %>%
