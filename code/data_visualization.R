@@ -429,13 +429,64 @@ WI_wide <- WI_data %>%
 
 ### MN and WI line plot 
 
+
+
 MN_fig <- ggplot(MN_wide, aes(x=WATER, y=TISSUE))+geom_point()
 MN_fig
 
 WI_fig <- ggplot(WI_wide, aes(x=WATER, y=TISSUE))+geom_point()
 WI_fig
 
-##### MN and WI state box plots 
+##### MN and WI state box plots combined 
+
+MN_WI_data <- all_data %>%
+  filter(STATE_NAME=='Minnesota' | STATE_NAME == 'Wisconsin')
+
+MN_WI_box <- MN_WI_data %>%
+  mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == 'PERFLUOROOCTANESULFONATE' ~
+                                               'PERFLUOROOCTANE SULFONIC ACID', TADA.CharacteristicName == 'PFOA ION' ~ 'PERFLUOROOCTANOIC ACID',
+                                             T ~ TADA.CharacteristicName)) %>%
+  filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE')
+options(scipen=10000)
+
+
+
+media.labs <- c("TISSUE", "WATER")
+names(media.labs)<-c("Tissue (ug/kg)", "Water (ug/L)")
+
+state.labs <-c("Minnesota", "Wisconsin")
+names(state.labs)<-c("Minn","Wisc")
+
+
+ggplot() + 
+  geom_boxplot(data = MN_WI_box, aes(x = Abbrev.Name,
+                                  y = TADA.ResultMeasureValue)) +
+  # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
+  #                                  y = TADA.ResultMeasureValue)) +
+  theme_bw() +
+  scale_y_log10() +
+  facet_grid(rows = vars(STATE_NAME),
+    cols = vars(TADA.ActivityMediaName),
+    scales = 'free_y')+
+  xlab('Characteristic Name') + 
+  ylab('Sample Result Value') + 
+  guides(x =guide_axis(angle = 45)) +
+  theme(text = element_text(size = 8))
+
+ggsave('output/figures/params_by_media_boxplot_MN_WI.jpg', units = 'in',
+       height = 5, width = 6)
+
+
+
+
+
+
+
+
+
+#### Box plots for each state
+
+
 MN_box <- MN_data %>%
   mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == 'PERFLUOROOCTANESULFONATE' ~
                                                'PERFLUOROOCTANE SULFONIC ACID', TADA.CharacteristicName == 'PFOA ION' ~ 'PERFLUOROOCTANOIC ACID',
@@ -454,7 +505,7 @@ facet_labeller <- function(variable,value){
 
 
 ggplot() + 
-  geom_boxplot(data = MN_box, aes(x = TADA.CharacteristicName, 
+  geom_boxplot(data = MN_box, aes(x = Abbrev.Name,
                                   y = TADA.ResultMeasureValue)) +
   # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
   #                                  y = TADA.ResultMeasureValue)) +
@@ -491,7 +542,7 @@ facet_labeller <- function(variable,value){
 }
 
 ggplot() + 
-  geom_boxplot(data = WI_box, aes(x = TADA.CharacteristicName, 
+  geom_boxplot(data = WI_box, aes(x = Abbrev.Name, 
                                   y = TADA.ResultMeasureValue)) +
   # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
   #                                  y = TADA.ResultMeasureValue)) +
