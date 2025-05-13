@@ -425,7 +425,7 @@ ggplot() +
   #                                  y = TADA.ResultMeasureValue)) +
   theme_bw() +
   scale_y_log10() +
-  facet_grid(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
+  facet_wrap(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
              cols = vars(TADA.ActivityMediaName),
              scales = 'free_y') + 
   xlab('Characteristic Name') + 
