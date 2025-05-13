@@ -280,6 +280,31 @@ table_by_species <- all_data %>%
 
 write_csv(table_by_species, 'output/figures/table_by_species.csv')
 
+#### Tables by state 
+
+MN_data <- all_data %>%
+  filter(STATE_NAME=='Minnesota')
+WI_data <- all_data %>%
+  filter(STATE_NAME=='Wisconsin')
+
+table_by_species_MN <- MN_data %>%
+  filter(!is.na(SubjectTaxonomicName)) %>%
+  group_by(SubjectTaxonomicName) %>%
+  reframe(SubjectTaxonomicName = SubjectTaxonomicName, 
+          'Number of Sample' = n()) %>%
+  unique()
+
+write_csv(table_by_species_MN, 'output/figures/table_by_species_MN.csv')
+
+table_by_species_WI <- WI_data %>%
+  filter(!is.na(SubjectTaxonomicName)) %>%
+  group_by(SubjectTaxonomicName) %>%
+  reframe(SubjectTaxonomicName = SubjectTaxonomicName, 
+          'Number of Sample' = n()) %>%
+  unique()
+
+write_csv(table_by_species_WI, 'output/figures/table_by_species_WI.csv')
+
 #####Summarize by State#####
 table_by_state <- all_data %>%
   filter(!is.na(STATE_NAME)) %>%
@@ -418,16 +443,27 @@ MN_box <- MN_data %>%
   filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE')
 options(scipen=10000)
 
+facet_names <- list(
+  'TISSUE'="Tissue (ug/kg)",
+  'WATER'="Water (ug/L)"
+)
+
+facet_labeller <- function(variable,value){
+  return(facet_names[value])
+}
+
+
 ggplot() + 
   geom_boxplot(data = MN_box, aes(x = TADA.CharacteristicName, 
-                                           y = TADA.ResultMeasureValue)) +
+                                  y = TADA.ResultMeasureValue)) +
   # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
   #                                  y = TADA.ResultMeasureValue)) +
   theme_bw() +
   scale_y_log10() +
-  facet_wrap(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
-             cols = vars(TADA.ActivityMediaName),
-             scales = 'free_y') + 
+  facet_grid(#rows = vars(TADA.ResultMeasure.MeasureUnitCode),
+    cols = vars(TADA.ActivityMediaName),
+    scales = 'free_y',
+    labeller=facet_labeller) + 
   xlab('Characteristic Name') + 
   ylab('Sample Result Value') + 
   guides(x =guide_axis(angle = 45)) +
@@ -444,6 +480,16 @@ WI_box <- WI_data %>%
   filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE')
 options(scipen=10000)
 
+
+facet_names <- list(
+  'TISSUE'="Tissue (ug/kg)",
+  'WATER'="Water (ug/L)"
+)
+
+facet_labeller <- function(variable,value){
+  return(facet_names[value])
+}
+
 ggplot() + 
   geom_boxplot(data = WI_box, aes(x = TADA.CharacteristicName, 
                                   y = TADA.ResultMeasureValue)) +
@@ -451,9 +497,10 @@ ggplot() +
   #                                  y = TADA.ResultMeasureValue)) +
   theme_bw() +
   scale_y_log10() +
-  facet_grid(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
+  facet_grid(#rows = vars(TADA.ResultMeasure.MeasureUnitCode),
              cols = vars(TADA.ActivityMediaName),
-             scales = 'free_y') + 
+             scales = 'free_y',
+             labeller=facet_labeller) + 
   xlab('Characteristic Name') + 
   ylab('Sample Result Value') + 
   guides(x =guide_axis(angle = 45)) +
