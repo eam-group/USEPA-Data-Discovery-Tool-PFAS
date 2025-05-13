@@ -354,6 +354,28 @@ ggsave('output/figures/params_by_media_boxplot.jpg', units = 'in',
        height = 5, width = 6)
 
 
+### scatter plots
+
+ggplot() + 
+  geom_point(data = all_data_4_plot, aes(x = TADA.CharacteristicName, 
+                                           y = TADA.ResultMeasureValue)) +
+  # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
+  #                                  y = TADA.ResultMeasureValue)) +
+  theme_bw() +
+  scale_y_log10() +
+  facet_grid(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
+             cols = vars(TADA.ActivityMediaName),
+             scales = 'free_y') + 
+  xlab('Characteristic Name') + 
+  ylab('Sample Result Value') + 
+  guides(x =guide_axis(angle = 45)) +
+  theme(text = element_text(size = 8))
+
+ggsave('output/figures/params_by_media_scatter.jpg', units = 'in',
+       height = 5, width = 6)
+
+
+
 ##### tissue vs concentration 
 ##make df for just MN data 
 MN_data <- all_data %>%
@@ -387,6 +409,59 @@ MN_fig
 
 WI_fig <- ggplot(WI_wide, aes(x=WATER, y=TISSUE))+geom_point()
 WI_fig
+
+##### MN and WI state box plots 
+MN_box <- MN_data %>%
+  mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == 'PERFLUOROOCTANESULFONATE' ~
+                                               'PERFLUOROOCTANE SULFONIC ACID', TADA.CharacteristicName == 'PFOA ION' ~ 'PERFLUOROOCTANOIC ACID',
+                                             T ~ TADA.CharacteristicName)) %>%
+  filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE')
+options(scipen=10000)
+
+ggplot() + 
+  geom_boxplot(data = MN_box, aes(x = TADA.CharacteristicName, 
+                                           y = TADA.ResultMeasureValue)) +
+  # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
+  #                                  y = TADA.ResultMeasureValue)) +
+  theme_bw() +
+  scale_y_log10() +
+  facet_grid(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
+             cols = vars(TADA.ActivityMediaName),
+             scales = 'free_y') + 
+  xlab('Characteristic Name') + 
+  ylab('Sample Result Value') + 
+  guides(x =guide_axis(angle = 45)) +
+  theme(text = element_text(size = 8))+
+  ggtitle('Minnesota')
+
+ggsave('output/figures/params_by_media_boxplot_MN.jpg', units = 'in',
+       height = 5, width = 6)
+
+WI_box <- WI_data %>%
+  mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == 'PERFLUOROOCTANESULFONATE' ~
+                                               'PERFLUOROOCTANE SULFONIC ACID', TADA.CharacteristicName == 'PFOA ION' ~ 'PERFLUOROOCTANOIC ACID',
+                                             T ~ TADA.CharacteristicName)) %>%
+  filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE')
+options(scipen=10000)
+
+ggplot() + 
+  geom_boxplot(data = WI_box, aes(x = TADA.CharacteristicName, 
+                                  y = TADA.ResultMeasureValue)) +
+  # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
+  #                                  y = TADA.ResultMeasureValue)) +
+  theme_bw() +
+  scale_y_log10() +
+  facet_grid(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
+             cols = vars(TADA.ActivityMediaName),
+             scales = 'free_y') + 
+  xlab('Characteristic Name') + 
+  ylab('Sample Result Value') + 
+  guides(x =guide_axis(angle = 45)) +
+  theme(text = element_text(size = 8))+
+  ggtitle('Wisconsin')
+
+ggsave('output/figures/params_by_media_boxplot_WI.jpg', units = 'in',
+       height = 5, width = 6)
 
 # code to generate sample sizes 
 
