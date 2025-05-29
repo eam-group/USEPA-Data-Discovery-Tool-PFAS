@@ -2,7 +2,7 @@
 
 #Written by: Hannah Ferriby (hannah.ferriby@tetratech.com)
 #Date created: 2025-5-6
-#Date updated: 
+#Date updated: 2025-5-29
 
 ####Libraries####
 library(tidyverse)
@@ -357,51 +357,51 @@ all_data_4_plot <- filtered_data %>%
   mutate(TADA.CharacteristicName = case_when(TADA.CharacteristicName == 'PERFLUOROOCTANESULFONATE' ~
                                                'PERFLUOROOCTANE SULFONIC ACID', TADA.CharacteristicName == 'PFOA ION' ~ 'PERFLUOROOCTANOIC ACID',
                                              T ~ TADA.CharacteristicName)) %>%
-  filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE')
+  filter(TADA.ResultMeasure.MeasureUnitCode != 'NONE') %>%
+  mutate(TADA.ActivityMediaName = ifelse(TADA.ActivityMediaName == 'WATER', 'SURFACE WATER', TADA.ActivityMediaName))
 options(scipen=10000)
 
 ggplot() + 
-  geom_boxplot(data = all_data_4_plot, aes(x = TADA.CharacteristicName, 
+  geom_boxplot(data = all_data_4_plot, aes(x = Abbrev.Name, 
                                            y = TADA.ResultMeasureValue)) +
-  # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
-  #                                  y = TADA.ResultMeasureValue)) +
   theme_bw() +
   scale_y_log10() +
-  facet_grid(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
-             cols = vars(TADA.ActivityMediaName),
-             scales = 'free_y') + 
+  facet_wrap(~TADA.ActivityMediaName,
+             scales = 'free_y',
+             nrow = 2) + 
   xlab('Characteristic Name') + 
   ylab('Sample Result Value') + 
   guides(x =guide_axis(angle = 45)) +
-  theme(text = element_text(size = 8))
+  theme(text = element_text(size = 8),
+        strip.background = element_rect(fill="gray99"))
 
 ggsave('output/figures/params_by_media_boxplot.jpg', units = 'in',
        height = 5, width = 6)
 
 
-### scatter plots
+#####Jitter plot#####
 
-ggplot() + 
-  geom_point(data = all_data_4_plot, aes(x = TADA.CharacteristicName, 
-                                           y = TADA.ResultMeasureValue)) +
-  # geom_jitter(data = all_data, aes(x = TADA.CharacteristicName, 
-  #                                  y = TADA.ResultMeasureValue)) +
+ggplot() +
+  geom_jitter(data = all_data, aes(x = Abbrev.Name,
+                                   y = TADA.ResultMeasureValue),
+              alpha = 0.25) +
   theme_bw() +
   scale_y_log10() +
-  facet_grid(rows = vars(TADA.ResultMeasure.MeasureUnitCode),
-             cols = vars(TADA.ActivityMediaName),
-             scales = 'free_y') + 
-  xlab('Characteristic Name') + 
-  ylab('Sample Result Value') + 
+  facet_wrap(~TADA.ActivityMediaName,
+             scales = 'free_y',
+             nrow = 2) +
+  xlab('Characteristic Name') +
+  ylab('Sample Result Value') +
   guides(x =guide_axis(angle = 45)) +
-  theme(text = element_text(size = 8))
+  theme(text = element_text(size = 8),
+        strip.background = element_rect(fill="gray99"))
 
 ggsave('output/figures/params_by_media_scatter.jpg', units = 'in',
        height = 5, width = 6)
 
 
 
-##### tissue vs concentration 
+#####tissue vs concentration #####
 ##make df for just MN data 
 MN_data <- all_data %>%
   filter(STATE_NAME=='Minnesota')
@@ -473,7 +473,8 @@ ggplot() +
   xlab('Characteristic Name') + 
   ylab('Sample Result Value') + 
   guides(x =guide_axis(angle = 45)) +
-  theme(text = element_text(size = 8))
+  theme(text = element_text(size = 8),
+        strip.background = element_rect(fill="gray99"))
 
 ggsave('output/figures/params_by_media_boxplot_MN_WI.jpg', units = 'in',
        height = 5, width = 6)
@@ -577,7 +578,7 @@ ggplot(all_data,
                alpha = 0.8, aes(fill = sample_lower_than_detection_limit_flag,
                                 color = sample_lower_than_detection_limit_flag), position=position_dodge(preserve="single")) +
   #geom_point(position = position_jitterdodge(jitter.width = 0.2), alpha = 0.2, size = 0.5) +
-  # stat_summary(fun.data = give.n, geom = "text", size = 2, position = position_dodge(width = 0.75)) +
+  stat_summary(fun.data = give.n, geom = "text", size = 2, position = position_dodge(width = 0.75)) +
   geom_segment(data = data_summary_surfacewater,
                aes(x = as.numeric(Abbrev.Name) - 0.3,
                    xend = as.numeric(Abbrev.Name) + 0.3,
