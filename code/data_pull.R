@@ -4,7 +4,7 @@
 
 #Written by: Hannah Ferriby, hannah.ferriby@tetratech.com
 #Date created: 2025-5-2
-#Date updated: 2025-5-6
+#Date updated: 2025-5-29
 
 
 ####Set Up####
@@ -26,7 +26,8 @@ data <- TADA_DataRetrieval(characteristicName = c('PFOA ion'
                                                   # , 'POTASSIUM PERFLUOROOCTANESULFONATE'
                                                   ),
                            # sampleMedia = c('Water', 'Tissue'), 
-                           applyautoclean = T)
+                           applyautoclean = T,
+                           ask = F)
 
 
 ####Export####
@@ -76,20 +77,23 @@ filt_pie <- states_w_data %>%
   st_drop_geometry()
 
 filt_pie2 <- extract(filt_pie, centroid, into = c('Lat', 'Lon'), '\\((.*),(.*)\\)', conv = T) %>%
-  filter(!is.na(Lat))
+  filter(!is.na(Lat)) %>%
+  rename(`All Water` = Water) %>%
+  mutate(radius = sqrt(n_samples_total)/25)
+
 
 
 ggplot() +
-  geom_sf(data = states, color = 'gray40', fill = 'gray90') +
+  geom_sf(data = states, color = 'black', fill = 'gray90') +
   geom_scatterpie(data = as.data.frame(filt_pie2), 
-                  aes(x = Lat, y = Lon, group = STATE_NAME, r = sqrt(n_samples_total)/25), 
-                  cols = c("Tissue", "Water", "Sediment", "Air", "Soil", "Other"),
+                  aes(x = Lat, y = Lon, group = STATE_NAME, r = radius), 
+                  cols = c("Tissue", "All Water", "Sediment", "Air", "Soil", "Other"),
                   color = 'black', size = 0.1) +
   theme_bw() +
   scale_fill_manual(name = 'Media Type',
                     values = c(
                       "Tissue" = "#FF9999",   # Light red
-                      "Water" = "#99CCFF",    # Light blue
+                      "All Water" = "#99CCFF",    # Light blue
                       "Sediment" = "#FFCC99", # Light orange
                       "Air" = "#CCCC99",      # Light olive
                       "Soil" = "#99CC99",     # Light green
@@ -101,8 +105,17 @@ ggplot() +
         legend.text = element_text(size = 6),    # Reduces legend text size
         legend.title = element_text(size = 6),   # Reduces legend title text size
         legend.key.size = unit(0.5, "lines"),
-        axis.text = element_text(size = 5)) +
-  guides(fill = guide_legend(override.aes = list(size = 0.5))) 
+        axis.text = element_text(size = 8)) +
+  guides(fill = guide_legend(override.aes = list(size = 0.5))) + 
+  geom_scatterpie_legend(radius = filt_pie2$radius,
+                         x=-120, y=20
+                         , labeller=function(h) ((h*25)^2),
+                         n = 5, 
+                         breaks = c(0.4,
+                                    0.8944271909999159,
+                                    1.264911064067352,
+                                    2.82842712474619,
+                                    4),
+                         size = 3)
 
-
-ggsave('output/figures/scatterpie_map_all_media.jpg', units = 'in', width = 4.5, height = 4, dpi = 500)
+ggsave('output/figures/scatterpie_map_all_media.jpg', units = 'in', width = 6, height = 6, dpi = 500)
