@@ -102,8 +102,8 @@ ggplot() +
   xlab('')+
   ylab('')+
   theme(legend.position = 'top',
-        legend.text = element_text(size = 6),    # Reduces legend text size
-        legend.title = element_text(size = 6),   # Reduces legend title text size
+        legend.text = element_text(size = 8),    # Reduces legend text size
+        legend.title = element_text(size = 8),   # Reduces legend title text size
         legend.key.size = unit(0.5, "lines"),
         axis.text = element_text(size = 8)) +
   guides(fill = guide_legend(override.aes = list(size = 0.5))) + 

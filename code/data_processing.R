@@ -449,7 +449,8 @@ ggplot() +
                                     0.8944271909999159,
                                     1.264911064067352,
                                     2.82842712474619,
-                                    4))
+                                    4),
+                         size = 3)
 
 
 ggsave('output/figures/scatterpie_map_water_tissue_filtered.jpg', units = 'in', width = 6, height = 6, dpi = 500)
