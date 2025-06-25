@@ -21,20 +21,30 @@ species_only <- final_nla_2022_pfas_public_release_file_8_19_24_0_Species_Only  
 
 data$`EPA Sample ID`<-as.factor(data$`EPA Sample ID`)
 species_only$`EPA Sample ID`<-as.factor(species_only$`EPA Sample ID`)
+species_data$`EPA Sample ID`<-as.factor(species_data$`EPA Sample ID`)
 
-###combine species data with concentration data
 
-combined_data <- left_join(data, species_only, by="EPA Sample ID")
+species_data_unique <- species_data %>%
+  distinct(`EPA Sample ID`, .keep_all=TRUE)
+
+species_data_unique
+
+species_data_unique$`EPA Sample ID` <- as.factor(species_data_unique$`EPA Sample ID`)
+
+###combine species data with concentration data, this is now concentration and species for each site
+
+combined_data <- left_join(data, species_data_unique, by="EPA Sample ID")
 
 combined_data
 
 ##count and plot species data 
 
-unique_count_species <- length(unique(combined_data$`Species - Scientific Name`))
+unique_count_species <- length(unique(species_data$`Species - Scientific Name`))
 unique_count_species
 #21 Species 
 
-freq_species_df <- as.data.frame(table(combined_data$`Species - Scientific Name`))
+freq_species_df <- as.data.frame(table(species_data$`Species - Scientific Name`))
+freq_name_df <- as.data.frame(table(species_data$`Species - Common Name`))
 
 ggplot(freq_species_df, aes(x = Var1, y = Freq)) +
   geom_bar(stat = "identity", fill = "skyblue") +
@@ -43,8 +53,19 @@ ggplot(freq_species_df, aes(x = Var1, y = Freq)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size =10))+
   #scale_x_discrete(limits = c("PFMBA", "3:3 FTCA", "5:3 FTCA", "7:3 FTCA", "PFBA", "PFPeA", "PFHpA", "PFOA", "PFNA", "PFDA", "PFUnA", "PFDoA", "PFTrDA", "PFTeDA", "PFHxS", "PFHpS", "PFOS", "N-EtFOSE", "N-MeFOSAA", "N-EtFOSAA", "PFOSA", "PFNS", "PFDS", "PFDoS"))+
   xlab("Species")+
-  ylab("Frequency of Detection")+
+  ylab("Frequency of Sampling")+
   theme(axis.text.y = element_text(size =10))
+
+ggplot(freq_name_df, aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Frequency of Species Sampled", x = "Values", y = "Frequency") +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size =10))+
+  #scale_x_discrete(limits = c("PFMBA", "3:3 FTCA", "5:3 FTCA", "7:3 FTCA", "PFBA", "PFPeA", "PFHpA", "PFOA", "PFNA", "PFDA", "PFUnA", "PFDoA", "PFTrDA", "PFTeDA", "PFHxS", "PFHpS", "PFOS", "N-EtFOSE", "N-MeFOSAA", "N-EtFOSAA", "PFOSA", "PFNS", "PFDS", "PFDoS"))+
+  xlab("Species")+
+  ylab("Frequency of Sampling")+
+  theme(axis.text.y = element_text(size =10))
+
 
 
 ##### concentration data summary 
@@ -72,6 +93,14 @@ unique_count_clean <- length(unique(cleaned_data$Analyte))
 unique_count_clean
 ##24 compounds with actual data 
 
+### remove NAs in analyte detection for combined data
+
+cleaned_data_combined <- combined_data[!is.na(combined_data$Amount), ]
+cleaned_data_combined
+##2001 measurements left (2001/16520 = 87.8% were non detects, 12.2% were detects)
+unique_count_clean <- length(unique(cleaned_data$Analyte))
+unique_count_clean
+##24 compounds with actual data 
 
 unique_values_clean <- unique(cleaned_data$Analyte)
 unique_values_clean
@@ -107,6 +136,7 @@ unique_sites_clean
 
 unique_states_clean <- unique(cleaned_data$State)
 unique_states_clean
+
 ###47 states (missing only Hawaii, Alaska, North Dakota)
 
 freq_table_cleaned_states <- table(cleaned_data$State)
