@@ -9,6 +9,7 @@ library(tidyverse)
 library(readxl)
 library(ggplot2)
 library(scales)
+library(ggpubr)
 
 
 options(scipen=999) ### no scientific notation
@@ -56,19 +57,19 @@ combined_data_no_nd <- combined_data %>%
   filter(!is.na(Amount)) %>%
   filter(Analyte %in% c('PFOA', "PFOS"))
 
-
+### lower boundary = higher BAF, upper boundary = lower BAF
 Cwater_analysis <- combined_data_no_nd %>%
   mutate(Cwater = case_when(Analyte == 'PFOA' ~
                               Amount/(10^pfoa_baf), #ng/L
                             Analyte == 'PFOS' ~
                               Amount/(10^pfos_baf),
                             T ~ NA),
-         Cwater_upper = case_when(Analyte == 'PFOA' ~
+         Cwater_lower = case_when(Analyte == 'PFOA' ~
                                     Amount/(10^(pfoa_baf+pfoa_baf_std)), #ng/L
                                   Analyte == 'PFOS' ~
                                     Amount/(10^(pfos_baf+pfos_baf_std)),
                                   T ~ NA),
-         Cwater_lower = case_when(Analyte == 'PFOA' ~
+         Cwater_upper = case_when(Analyte == 'PFOA' ~
                                     Amount/(10^(pfoa_baf-pfoa_baf_std)), #ng/L
                                   Analyte == 'PFOS' ~
                                     Amount/(10^(pfos_baf-pfos_baf_std)),
@@ -95,63 +96,72 @@ thresholds$x <- as.numeric(factor(thresholds$Analyte))
 thresholds$xmin <- thresholds$x - 0.3  # boxplot default width is 0.6
 thresholds$xmax <- thresholds$x + 0.3
 
-ggplot() + 
+estimate <- ggplot() + 
   geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater*1000))+
   geom_segment(data = thresholds,
                aes(x = xmin, xend = xmax,
                    y = Threshold, yend = Threshold,
                    color = Type),
                linetype = "dashed", size = 0.8) +
-  scale_y_log10() +
+  scale_y_log10(waiver()) +
   ylab('Water Concentration (ng/L)') +
   theme_classic() +
-  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
+  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))+
+  ggtitle("Estimated Water Concetrations from BAF")
 
 ###Upper Limit
 
-ggplot() + 
+upperestimate <- ggplot() + 
   geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater_upper*1000))+
   geom_segment(data = thresholds,
                aes(x = xmin, xend = xmax,
                    y = Threshold, yend = Threshold,
                    color = Type),
                linetype = "dashed", size = 0.8) +
-  scale_y_log10() +
+  scale_y_log10(waiver()) +
   ylab('Water Concentration (ng/L)') +
   theme_classic() +
-  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
+  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))+
+  ggtitle("Estimated Water Concetrations from BAF + StDev")
 
 
 ###Lower Limit
-ggplot() + 
+lowerestimate <- ggplot() + 
   geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater_lower*1000))+
   geom_segment(data = thresholds,
                aes(x = xmin, xend = xmax,
                    y = Threshold, yend = Threshold,
                    color = Type),
                linetype = "dashed", size = 0.8) +
-  scale_y_log10() +
+  scale_y_log10(waiver()) +
   ylab('Water Concentration (ng/L)') +
   theme_classic() +
-  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
+  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))+
+  ggtitle("Estimated Water Concetrations from BAF - StDev")
+lowerestimate
 
 ##### all 3 together 
 
+long_data <- pivot_longer(data=Cwater_analysis, cols=Cwater:Cwater_upper, names_to="Estimation", values_to = "Concentration")
+long_data
+
 ggplot() + 
-  geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater*1000))+
-  geom_boxplot(data=Cwater_analysis, aes(x=Analyte, y =Cwater_upper*1000), position=position_dodge(width=0.5))+
+  geom_boxplot(data = long_data, aes(x = Analyte, y = Concentration*1000))+
   geom_segment(data = thresholds,
                aes(x = xmin, xend = xmax,
                    y = Threshold, yend = Threshold,
                    color = Type),
                linetype = "dashed", size = 0.8) +
-  scale_y_log10() +
+  facet_wrap(~Estimation, scales="fixed")+
+  scale_y_log10(waiver()) +
   ylab('Water Concentration (ng/L)') +
   theme_classic() +
-  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
+  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))+
+  ggtitle("Estimated Water Concetrations from BAF")
 
+ggsave('output/NARS_figures/estimated_Water_Conc.jpg', 
+       height = 5, width = 8, dpi = 500)
 
-####Exploratory Plots####
 
 #####Frequency#####
 freq_species_df <- as.data.frame(table(species_data$`Species - Scientific Name`))
