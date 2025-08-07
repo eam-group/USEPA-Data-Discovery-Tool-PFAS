@@ -66,12 +66,12 @@ Cwater_analysis <- combined_data_no_nd %>%
          Cwater_upper = case_when(Analyte == 'PFOA' ~
                                     Amount/(10^(pfoa_baf+pfoa_baf_std)), #ng/L
                                   Analyte == 'PFOS' ~
-                                    Amount/(10^pfos_baf+pfos_baf_std),
+                                    Amount/(10^(pfos_baf+pfos_baf_std)),
                                   T ~ NA),
          Cwater_lower = case_when(Analyte == 'PFOA' ~
-                                    Amount/(10^pfoa_baf-pfoa_baf_std), #ng/L
+                                    Amount/(10^(pfoa_baf-pfoa_baf_std)), #ng/L
                                   Analyte == 'PFOS' ~
-                                    Amount/(10^pfos_baf-pfos_baf_std),
+                                    Amount/(10^(pfos_baf-pfos_baf_std)),
                                   T ~ NA))
 ####Water Plots####
 
@@ -87,7 +87,7 @@ Cwater_analysis <- combined_data_no_nd %>%
 thresholds <- data.frame(
   Analyte = c("PFOA", "PFOA", "PFOS", "PFOS"),
   Type = c("Acute", "Chronic", "Acute", "Chronic"),
-  Threshold = c(3100, 100, 71, 0.25)
+  Threshold = c(3100000, 100000, 71000, 2500)
 )
 
 # Map analyte names to x-axis positions
@@ -96,26 +96,56 @@ thresholds$xmin <- thresholds$x - 0.3  # boxplot default width is 0.6
 thresholds$xmax <- thresholds$x + 0.3
 
 ggplot() + 
-  geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater)) + 
+  geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater*1000))+
   geom_segment(data = thresholds,
                aes(x = xmin, xend = xmax,
                    y = Threshold, yend = Threshold,
                    color = Type),
                linetype = "dashed", size = 0.8) +
   scale_y_log10() +
-  ylab('Water Concentration (ug/L)') +
+  ylab('Water Concentration (ng/L)') +
+  theme_classic() +
+  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
+
+###Upper Limit
+
+ggplot() + 
+  geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater_upper*1000))+
+  geom_segment(data = thresholds,
+               aes(x = xmin, xend = xmax,
+                   y = Threshold, yend = Threshold,
+                   color = Type),
+               linetype = "dashed", size = 0.8) +
+  scale_y_log10() +
+  ylab('Water Concentration (ng/L)') +
   theme_classic() +
   scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
 
 
+###Lower Limit
 ggplot() + 
-  geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater*1000)) + 
+  geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater_lower*1000))+
   geom_segment(data = thresholds,
                aes(x = xmin, xend = xmax,
-                   y = Threshold*1000, yend = Threshold*1000,
+                   y = Threshold, yend = Threshold,
                    color = Type),
                linetype = "dashed", size = 0.8) +
-  scale_y_log10(labels = scales::comma_format()) +
+  scale_y_log10() +
+  ylab('Water Concentration (ng/L)') +
+  theme_classic() +
+  scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
+
+##### all 3 together 
+
+ggplot() + 
+  geom_boxplot(data = Cwater_analysis, aes(x = Analyte, y = Cwater*1000))+
+  geom_boxplot(data=Cwater_analysis, aes(x=Analyte, y =Cwater_upper*1000), position=position_dodge(width=0.5))+
+  geom_segment(data = thresholds,
+               aes(x = xmin, xend = xmax,
+                   y = Threshold, yend = Threshold,
+                   color = Type),
+               linetype = "dashed", size = 0.8) +
+  scale_y_log10() +
   ylab('Water Concentration (ng/L)') +
   theme_classic() +
   scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))
