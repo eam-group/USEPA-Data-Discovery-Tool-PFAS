@@ -145,6 +145,17 @@ lowerestimate
 long_data <- pivot_longer(data=Cwater_analysis, cols=Cwater:Cwater_upper, names_to="Estimation", values_to = "Concentration")
 long_data
 
+label_names <- list(
+  'Cwater'="Estimation",
+  'Cwater_lower' = "Lower Bound",
+  'Cwater_upper'="Upper Bound"
+)
+
+labeller_function <- function(variable, value){
+  return(label_names[value])
+}
+
+
 ggplot() + 
   geom_boxplot(data = long_data, aes(x = Analyte, y = Concentration*1000))+
   geom_segment(data = thresholds,
@@ -152,12 +163,12 @@ ggplot() +
                    y = Threshold, yend = Threshold,
                    color = Type),
                linetype = "dashed", size = 0.8) +
-  facet_wrap(~Estimation, scales="fixed")+
+  facet_wrap(~Estimation, scales="fixed", labeller=labeller_function)+
   scale_y_log10(waiver()) +
   ylab('Water Concentration (ng/L)') +
   theme_classic() +
   scale_color_manual(name = 'Standard', values = c('#03a5fc', '#d10804'))+
-  ggtitle("Estimated Water Concetrations from BAF")
+  ggtitle("Estimated Water Concetrations from NARS Fish Tissue")
 
 ggsave('output/NARS_figures/estimated_Water_Conc.jpg', 
        height = 5, width = 8, dpi = 500)
@@ -294,8 +305,9 @@ p <- ggplot(plots, aes(x=Analyte, y=Amount, color=plots$Type, fill = plots$Type)
   scale_y_log10()+
   scale_color_manual('Group', values=c('#A52A2A', '#720c99','darkgreen','#a76004','darkred','black','blue')) +
   scale_fill_manual('Group', values = c('#A0522D', 'purple','green','orange','red','gray50','#5b8cf0'))
-
 p
+ggsave('output/NARS_figures/fish tissue concentrations.jpg', 
+       height = 5, width = 8, dpi = 500)
 
 cleaned_data
 
