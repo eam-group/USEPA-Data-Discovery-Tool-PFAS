@@ -212,6 +212,41 @@ ggplot() +
 
 ggsave('output/NARS_figures/avg_samples_map.jpg', units = 'in',
        height = 9, width = 6.5, dpi = 300)
+
+
+#Average predicted Cwater by state
+data_4_maps3 <- Cwater_analysis %>%
+  filter(Analyte %in% c('PFBA', 'PFPeA', 'PFHpA', 'PFOA', 'PFNA',
+                        'PFDA', 'PFUnA', 'PFDoA', 'PFTrDA', 'PFTeDA',
+                        'PFHxS', 'PFHpS', 'PFOS', 'PFOSA')) %>%
+  left_join(states, by = c('State' = 'STUSPS')) %>%
+  group_by(State, Analyte) %>%
+  reframe(State = State,
+          geometry = geometry,
+          Analyte = Analyte,
+          value = mean(Cwater, na.rm = T)) %>%
+  unique() %>%
+  st_as_sf() 
+
+ggplot() +
+  geom_sf(data = states, fill = 'gray', color = 'black') + 
+  geom_sf(data = data_4_maps3, aes(fill = value),
+          color = 'black') + 
+  theme_bw() +
+  facet_wrap(~Analyte, nrow = 7) +
+  scale_fill_continuous(name = 'Average Cwater\nEstimation (ng/L)',
+                        palette = c("#1d2f6f","#8390fa", "#fac748"),
+                        na.value = 'gray',
+                        trans = "log10") +
+  theme(legend.position = 'top',
+        strip.background = element_rect(fill="#fbf6ef"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.text = element_text(angle = 45, hjust = 1))
+
+ggsave('output/NARS_figures/avg_estimated_map.jpg', units = 'in',
+       height = 9, width = 6.5, dpi = 300)
+
+
 ####**OLD**####
 #####Boxplot#####
 # # Map analyte names to x-axis positions
