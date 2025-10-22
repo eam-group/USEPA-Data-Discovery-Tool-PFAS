@@ -58,6 +58,7 @@ combined_data2 <- combined_data %>%
          sample_lower_than_detection_limit_flag = ifelse(Amount < MDL, 'FAIL', 'PASS'),
          analytical_lab_flag = ifelse(is.na(`Lab Flag`), 'PASS', 'FAIL'))
 
+
 nrow(filter(combined_data2, analytical_lab_flag == 'PASS')) #1157
 
 ####Analysis####
@@ -66,35 +67,22 @@ nrow(filter(combined_data2, analytical_lab_flag == 'PASS')) #1157
 #Cbiota from NARS
 #Solve for Cwater
 
-pfoa_baf <- 2.16 #L/kg
-pfoa_baf_std <- 0.85 #L/kg
+BAFs <- data.frame(Analyte = c('PFBA', 'PFPeA', 'PFHxA', 'PFHpA', 'PFOA', 'PFNA',
+                               'PFDA', 'PFUnDA', 'PFDoDA', 'PFTrDA', 'PFTeDA',
+                               'PFBS', 'PFHxS', 'PFHpS', 'PFOS', 'FOSA'),
+                   BAF = c(0.47, -0.31, 0.21, -0.16, 0.93, 2.16, 3.10, 3.88,
+                           4.77, 4.66, 4.38, 1.35, 1.30, 2.20, 3.18, 2.95),
+                   BAF_std = c(0.96, 0.57, 1.33, 1.27, 1.15, 0.78, 0.50, 0.8,
+                               1.72, 0.16, 0, 0.84, 0.90, 0, 0.68, 0.94))
 
-pfos_baf <- 3.55 #L/kg
-pfos_baf_std <- 0.83 #L/kg
-
-#Remove non-detects (nd) from dataset
-##2001 measurements left (2001/16520 = 87.8% were non detects, 12.2% were detects)
-combined_data_no_nd <- combined_data %>%
-  filter(!is.na(Amount)) %>%
-  filter(Analyte %in% c('PFOA', "PFOS"))
 
 ### lower boundary = higher BAF, upper boundary = lower BAF
-Cwater_analysis <- combined_data_no_nd %>%
-  mutate(Cwater = case_when(Analyte == 'PFOA' ~
-                              Amount/(10^pfoa_baf), #ng/L
-                            Analyte == 'PFOS' ~
-                              Amount/(10^pfos_baf),
-                            T ~ NA),
-         Cwater_lower = case_when(Analyte == 'PFOA' ~
-                                    Amount/(10^(pfoa_baf+pfoa_baf_std)), #ng/L
-                                  Analyte == 'PFOS' ~
-                                    Amount/(10^(pfos_baf+pfos_baf_std)),
-                                  T ~ NA),
-         Cwater_upper = case_when(Analyte == 'PFOA' ~
-                                    Amount/(10^(pfoa_baf-pfoa_baf_std)), #ng/L
-                                  Analyte == 'PFOS' ~
-                                    Amount/(10^(pfos_baf-pfos_baf_std)),
-                                  T ~ NA))
+Cwater_analysis <- combined_data2 %>%
+  left_join(BAFs, by = 'Analyte') %>%
+  mutate(Cwater = Amount/(10^BAF),
+         Cwater_lower = Amount/(10^(BAF+BAF_std)),
+         Cwater_upper = Amount/(10^(BAF-BAF_std)))
+
 ####Water Plots####
 
 #####Boxplot#####
