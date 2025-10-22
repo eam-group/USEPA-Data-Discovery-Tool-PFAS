@@ -3,7 +3,7 @@
 
 #Written by: Matt Dunn (Tetra Tech) & Hannah Ferriby (Tetra Tech)
 #Date created: 6/24/25
-#Date updated: 7/9/25
+#Date updated: 10/22/25
 
 library(tidyverse)
 library(readxl)
@@ -38,6 +38,27 @@ combined_data <- left_join(data, species_data, by="EPA Sample ID") %>%
 ##count data 
 unique_count_species <- length(unique(species_data$`Species - Scientific Name`))
 
+####Data Processing####
+detect_summary <- combined_data %>%
+  group_by(Analyte, `Units 1`) %>%
+  reframe(Analyte = Analyte,
+          `Units 1` = `Units 1`,
+          DL_avg = mean(MDL, na.rm=T),
+          DL_median = median(MDL, na.rm=T),
+          DL_std = sd(MDL, na.rm=T),
+          DL_min = min(MDL, na.rm=T),
+          DL_max = max(MDL, na.rm=T)) %>%
+  unique() %>%
+  filter(!is.na(`Units 1`))
+
+
+combined_data2 <- combined_data %>%
+  left_join(detect_summary, by = c('Analyte', 'Units 1')) %>%
+  mutate(detection_limit_value_flag = ifelse(MDL >= 2*DL_median, 'FAIL', 'PASS'),
+         sample_lower_than_detection_limit_flag = ifelse(Amount < MDL, 'FAIL', 'PASS'),
+         analytical_lab_flag = ifelse(is.na(`Lab Flag`), 'PASS', 'FAIL'))
+
+nrow(filter(combined_data2, analytical_lab_flag == 'PASS')) #1157
 
 ####Analysis####
 #BAF = Cbiota / Cwater
