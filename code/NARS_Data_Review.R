@@ -87,6 +87,12 @@ Cwater_analysis <- combined_data2 %>%
 
 write_csv(Cwater_analysis, 'output/test_cwater.csv')
 
+paste0("J flags are ", round(nrow(filter(combined_data2, str_detect(`Lab Flag`, 'J')))/
+                               nrow(combined_data2),4) * 100, '% of all samples')
+
+paste0("J flags are ", round(nrow(filter(Cwater_analysis, !is.na(Cwater) & str_detect(`Lab Flag`, 'J')))/
+         nrow(Cwater_analysis),4) * 100, '% of Cwater calculations')
+
 ####Water Plots####
 
 ####Boxplot####
