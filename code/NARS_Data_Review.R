@@ -3,7 +3,7 @@
 
 #Written by: Matt Dunn (Tetra Tech) & Hannah Ferriby (Tetra Tech)
 #Date created: 6/24/25
-#Date updated: 10/22/25
+#Date updated: 10/24/25
 
 library(tidyverse)
 library(readxl)
@@ -92,6 +92,25 @@ paste0("J flags are ", round(nrow(filter(combined_data2, str_detect(`Lab Flag`, 
 
 paste0("J flags are ", round(nrow(filter(Cwater_analysis, !is.na(Cwater) & str_detect(`Lab Flag`, 'J')))/
          nrow(Cwater_analysis),4) * 100, '% of Cwater calculations')
+
+####Summary Table####
+summary_cwater <- Cwater_analysis %>%
+  filter(!is.na(Cwater)) %>%
+  select(Analyte, Cwater) %>%
+  unique() %>%
+  group_by(Analyte) %>%
+  reframe(Analyte = Analyte,
+          Units = 'ng/L',
+          n_samples = n(),
+          Min = round(min(Cwater),4),
+          Q_25 = round(quantile(Cwater, 0.25),4),
+          Med = round(median(Cwater),4),
+          Mean = round(mean(Cwater),4),
+          Q_75 = round(quantile(Cwater, 0.75),4),
+          Max = round(max(Cwater),4)) %>%
+  unique()
+
+write_csv(summary_cwater, 'output/NARS_figures/summary_cwater.csv')
 
 ####Water Plots####
 

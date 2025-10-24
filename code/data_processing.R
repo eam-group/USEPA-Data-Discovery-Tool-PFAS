@@ -3,7 +3,7 @@
 
 #Written by: Hannah Ferriby, hannah.ferriby@tetratech.com
 #Date created: 2025-5-6
-#Date updated: 2025-5-29
+#Date updated: 2025-10-16
 
 
 ####Set Up####
@@ -35,7 +35,7 @@ state_num <- read.table('data/state_codes.txt', header = T, sep = "|", dec = "."
 states <- st_read('data/cb_2018_us_state_500k/cb_2018_us_state_500k.shp') %>%
   filter(!STATEFP %in% c('60', '66', '69', '78',
                          '15', '02'))
-
+ 
 ####Filter####
 unique(data$ActivityMediaName)
 unique(data$ActivityMediaSubdivisionName)
