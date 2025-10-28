@@ -3,7 +3,7 @@
 
 #Written by: Matt Dunn (Tetra Tech) & Hannah Ferriby (Tetra Tech)
 #Date created: 6/24/25
-#Date updated: 10/24/25
+#Date updated: 10/28/25
 
 library(tidyverse)
 library(readxl)
@@ -62,6 +62,13 @@ combined_data2 <- combined_data %>%
 
 nrow(filter(combined_data2, analytical_lab_flag == 'PASS')) #1157
 
+
+paste0("U flags are ", round(nrow(filter(combined_data2, str_detect(`Lab Flag`, 'U')))/
+                               nrow(combined_data2),4) * 100, '% of all samples')
+ 
+paste0("U flags are ", round(nrow(filter(Cwater_analysis, !is.na(BAF) & str_detect(`Lab Flag`, 'U')))/
+                               nrow(Cwater_analysis),4) * 100, '% of Cwater samples')
+
 ####Analysis####
 #BAF = Cbiota / Cwater
 #BAF from Burkhard 2021
@@ -92,6 +99,14 @@ paste0("J flags are ", round(nrow(filter(combined_data2, str_detect(`Lab Flag`, 
 
 paste0("J flags are ", round(nrow(filter(Cwater_analysis, !is.na(Cwater) & str_detect(`Lab Flag`, 'J')))/
          nrow(Cwater_analysis),4) * 100, '% of Cwater calculations')
+
+paste0("Samples with a reported value under the MDL are ", round(nrow(filter(combined_data2, Amount < MDL))/
+                               nrow(combined_data2),4) * 100, '% of all samples')
+
+paste0("Samples with a reported value under the MDL are ", round(nrow(filter(Cwater_analysis, Amount < MDL))/
+                               nrow(Cwater_analysis),4) * 100, '% of Cwater calculations')
+
+
 
 ####Summary Table####
 summary_cwater <- Cwater_analysis %>%
