@@ -86,7 +86,11 @@ Cwater_analysis <- combined_data2 %>%
   mutate(Cwater = (Amount/(10^BAF))*1000,
          Cwater_lower = (Amount/(10^(BAF+BAF_std)))*1000,
          Cwater_upper = (Amount/(10^(BAF-BAF_std)))*1000,
-         Cwater_units = 'ng/L')
+         Cwater_units = 'ng/L') %>%
+  mutate(Analyte = factor(Analyte,
+                          levels = c('PFBA', 'PFPeA', 'PFHpA', 'PFOA', 'PFNA',
+                                     'PFDA', 'PFUnA', 'PFDoA', 'PFTrDA', 'PFTeDA',
+                                     'PFHxS', 'PFHpS', 'PFOS', 'PFOSA')))
 
 write_csv(Cwater_analysis, 'output/test_cwater.csv')
 
