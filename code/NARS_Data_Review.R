@@ -3,7 +3,7 @@
 
 #Written by: Matt Dunn (Tetra Tech) & Hannah Ferriby (Tetra Tech)
 #Date created: 6/24/25
-#Date updated: 10/28/25
+#Date updated: 10/31/25
 
 library(tidyverse)
 library(readxl)
@@ -62,12 +62,8 @@ combined_data2 <- combined_data %>%
 
 nrow(filter(combined_data2, analytical_lab_flag == 'PASS')) #1157
 
+nrow(filter(combined_data2, detection_limit_value_flag == 'FAIL'))
 
-paste0("U flags are ", round(nrow(filter(combined_data2, str_detect(`Lab Flag`, 'U')))/
-                               nrow(combined_data2),4) * 100, '% of all samples')
- 
-paste0("U flags are ", round(nrow(filter(Cwater_analysis, !is.na(BAF) & str_detect(`Lab Flag`, 'U')))/
-                               nrow(Cwater_analysis),4) * 100, '% of Cwater samples')
 
 ####Analysis####
 #BAF = Cbiota / Cwater
@@ -106,13 +102,17 @@ paste0("Samples with a reported value under the MDL are ", round(nrow(filter(com
 paste0("Samples with a reported value under the MDL are ", round(nrow(filter(Cwater_analysis, Amount < MDL))/
                                nrow(Cwater_analysis),4) * 100, '% of Cwater calculations')
 
+paste0("U flags are ", round(nrow(filter(combined_data2, str_detect(`Lab Flag`, 'U')))/
+                               nrow(combined_data2),4) * 100, '% of all samples')
+
+paste0("U flags are ", round(nrow(filter(Cwater_analysis, !is.na(BAF) & str_detect(`Lab Flag`, 'U')))/
+                               nrow(Cwater_analysis),4) * 100, '% of Cwater samples')
 
 
 ####Summary Table####
 summary_cwater <- Cwater_analysis %>%
   filter(!is.na(Cwater)) %>%
   select(Analyte, Cwater) %>%
-  unique() %>%
   group_by(Analyte) %>%
   reframe(Analyte = Analyte,
           Units = 'ng/L',
@@ -126,6 +126,19 @@ summary_cwater <- Cwater_analysis %>%
   unique()
 
 write_csv(summary_cwater, 'output/NARS_figures/summary_cwater.csv')
+
+summary_samples <- combined_data2 %>%
+  select(Analyte, `Lab Flag`, Amount) %>%
+  mutate(ND = ifelse(str_detect(`Lab Flag`, 'U') &
+                       !is.na(`Lab Flag`) & is.na(Amount), T, F)) %>%
+  group_by(Analyte, ND) %>%
+  reframe(n = n()) %>%
+  unique()
+
+summary_samples_tot <- combined_data2 %>%
+  group_by(Analyte) %>%
+  reframe(n = n()) %>%
+  unique()
 
 ####Water Plots####
 
@@ -159,6 +172,14 @@ Cwater_4_plots <- Cwater_analysis %>%
                           levels = c('PFBA', 'PFPeA', 'PFHpA', 'PFOA', 'PFNA',
                                      'PFDA', 'PFUnA', 'PFDoA', 'PFTrDA', 'PFTeDA',
                                      'PFHxS', 'PFHpS', 'PFOS', 'PFOSA')))
+
+paste0("Cwater values exceed criteria/benchmarks ",
+       nrow(filter(Cwater_4_plots, value>Threshold & name == 'Cwater')),
+       " time(s)")
+
+paste0("Cwater_upper values exceed criteria/benchmarks ",
+       nrow(filter(Cwater_4_plots, value>Threshold & name == 'Cwater_upper')),
+       " time(s)")
 
 cwater_name_list <- c(
   'Cwater_lower' = 'Cwater Lower',
