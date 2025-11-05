@@ -18,14 +18,14 @@ library(scatterpie)
 ####Download####
 data <- TADA_DataRetrieval(characteristicName = c('PFOA ion'
                                                   , 'Perfluorooctanoic acid'
-                                                  # , 'PERFLUOROOCTANOIC ACID'
+                                                  , 'PERFLUOROOCTANOIC ACID'
                                                   ,'Perfluorooctanesulfonate'
                                                   , 'Perfluorooctane sulfonic acid'
-                                                  # , 'Potassium perfluorooctanesulfonate'
+                                                  , 'Potassium perfluorooctanesulfonate'
                                                   , 'Perfluorooctanesulfonate (PFOS)'
-                                                  # , 'POTASSIUM PERFLUOROOCTANESULFONATE'
+                                                  , 'POTASSIUM PERFLUOROOCTANESULFONATE'
                                                   ),
-                           # sampleMedia = c('Water', 'Tissue'), 
+                           sampleMedia = c('Water', 'Tissue'), 
                            applyautoclean = T,
                            ask = F)
 
