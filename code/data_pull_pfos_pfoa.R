@@ -4,7 +4,7 @@
 
 #Written by: Hannah Ferriby, hannah.ferriby@tetratech.com
 #Date created: 2025-5-2
-#Date updated: 2025-12-02
+#Date updated: 2025-5-29
 
 
 ####Set Up####
@@ -16,40 +16,22 @@ library(scales)
 library(scatterpie)
 
 ####Download####
-data <- TADA_DataRetrieval(characteristicType = c("PFAS,Perfluorinated Alkyl Substance",
-                                                    "Organics, PFAS", 
-                                                    "PFOA, Perfluorooctanoic Acid"),
-                             characteristicName = c('Perfluorooctanoic acid',
-                                                    'Perfluorooctanesulfonate (PFOS)',
-                                                    'Perfluorooctanesulfonate',
-                                                    #'Perfluorooctanesulfonic acid', #causes 400 error
-                                                    'Perfluorohexanesulfonate',
-                                                    'Hexafluoropropylene oxide dimer acid',
-                                                    'Hexafluoropropylene oxide-dimer acid',
-                                                    # 'Hexafluoropropylene oxide dimer acid ammonium salt',
-                                                    'Perfluorobutanesulfonic acid',
-                                                    'Perfluorononanoic acid',
-                                                    'Perfluorodecanesulfonate',
-                                                    'Perfluorodecanoic acid',
-                                                    'Perfluorododecanoic acid',
-                                                    '1-Heptanesulfonic acid, 1,1,2,2,3,3,4,4,5,5,6,6,7,7,7-pentadecafluoro-',
-                                                    'Perfluoroheptanesulfonate',
-                                                    'Perfluorooctanesulfonamide',
-                                                    'Perfluorotetradecanoic acid',
-                                                    'Perfluorotridecanoic acid',
-                                                    'Perfluoroundecanoic acid',
-                                                    'Perfluorobutanoic acid',
-                                                    'Perfluorohexanoic acid',
-                                                    'Perfluoropentanoic acid',
-                                                    'PFOA ion',
-                                                    'Perfluoroheptanoic acid'),
+data <- TADA_DataRetrieval(characteristicName = c('PFOA ion'
+                                                  , 'Perfluorooctanoic acid'
+                                                  , 'PERFLUOROOCTANOIC ACID'
+                                                  ,'Perfluorooctanesulfonate'
+                                                  , 'Perfluorooctane sulfonic acid'
+                                                  , 'Potassium perfluorooctanesulfonate'
+                                                  , 'Perfluorooctanesulfonate (PFOS)'
+                                                  , 'POTASSIUM PERFLUOROOCTANESULFONATE'
+                                                  ),
                            sampleMedia = c('Water', 'Tissue'), 
                            applyautoclean = T,
                            ask = F)
 
 
 ####Export####
-write_csv(data, 'output/data_pull_20251202.csv')
+write_csv(data, 'output/data_pull.csv')
 
 ####MAPS####
 state_num <- read.table('data/state_codes.txt', header = T, sep = "|", dec = ".") %>%

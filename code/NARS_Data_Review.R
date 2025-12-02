@@ -3,7 +3,7 @@
 
 #Written by: Matt Dunn (Tetra Tech) & Hannah Ferriby (Tetra Tech)
 #Date created: 6/24/25
-#Date updated: 10/31/25
+#Date updated: 11/5/25
 
 library(tidyverse)
 library(readxl)
@@ -27,6 +27,17 @@ species_data <- read_xlsx('Data/NARS/final-nla-2022-pfas-public-release-file-8-1
   select(`EPA Sample ID`, Family, `Species - Scientific Name`, 
          `Species - Common Name`) %>%
   distinct(`EPA Sample ID`, .keep_all=TRUE)
+
+#WQP water samples
+sw_samples <- read_csv('output/EPATADA_Original_data_with_flags_tags.csv') %>%
+  filter(sample_lower_than_detection_limit_flag == "Uncensored") %>%
+  filter(Abbrev.Name %in% c('PFOA', 'PFNA', 'PFDA', 'PFHxS', 'PFHpS', 'PFOS', 'PFOSA')) %>%
+  select(TADA.CharacteristicName, Abbrev.Name, TADA.ActivityMediaName,
+         ActivityMediaSubdivisionName, StateCode, TADA.MonitoringLocationName, 
+         TADA.LatitudeMeasure, TADA.LongitudeMeasure, HUCEightDigitCode, 
+         TADA.ResultMeasureValue, TADA.ResultMeasure.MeasureUnitCode,
+         sample_lower_than_detection_limit_flag)
+
 
 ####Join Datasets####
 
@@ -144,7 +155,6 @@ summary_samples_tot <- combined_data2 %>%
   reframe(n = n()) %>%
   unique()
 
-####Water Plots####
 
 ####Boxplot####
 #boxplot with limits
@@ -217,6 +227,39 @@ ggplot() +
 
 ggsave('output/NARS_figures/Cwater_threshold_boxplots.jpg', units = 'in',
        height = 7, width = 6, dpi = 300)
+
+
+#####Comparison#####
+sw_samples_convert <- sw_samples %>%
+  mutate(value = TADA.ResultMeasureValue/1000,
+         units = 'NG/L',
+         Source = 'SW Sample',
+         Analyte = Abbrev.Name) %>%
+  select(Analyte, value, units, Source)
+
+Cwater_4_plots2 <- Cwater_analysis %>%
+  filter(!is.na(Cwater)) %>%
+  select(Analyte, Cwater, Cwater_units) %>%
+  mutate(Source = 'NARS') %>%
+  rename(value = Cwater,
+         units = Cwater_units)
+  
+
+sw_cwater_combo <- sw_samples_convert %>%
+  rbind(Cwater_4_plots2)
+
+ggplot() + 
+  geom_boxplot(data = sw_cwater_combo,
+               aes(x = Analyte, y = value, color = Source)) +
+  theme_bw() + 
+  ylab('Measurement/Estimation (ng/L)') + 
+  scale_y_log10() + 
+  scale_color_manual(values = c("NARS" = "#fac748",
+                     "SW Sample" = "#8390fa")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave('output/NARS_figures/measured_vs_estimated_boxplots.jpg', units = 'in',
+       height = 5, width = 6, dpi = 300)
 
 ####Maps####
 states <- st_read('data/cb_2018_us_state_500k/cb_2018_us_state_500k.shp') %>%

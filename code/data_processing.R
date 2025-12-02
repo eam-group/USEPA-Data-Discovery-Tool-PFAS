@@ -3,7 +3,7 @@
 
 #Written by: Hannah Ferriby, hannah.ferriby@tetratech.com
 #Date created: 2025-5-6
-#Date updated: 2025-10-16
+#Date updated: 2025-12-2
 
 
 ####Set Up####
@@ -15,12 +15,37 @@ library(scales)
 library(scatterpie)
 
 ####Data####
-data <- read_csv('output/data_pull.csv') %>%
-  mutate(Abbrev.Name = case_when(TADA.CharacteristicName == "PERFLUOROOCTANOIC ACID" ~ "PFOA",
-                                 TADA.CharacteristicName == "PFOA ION" ~ "PFOA",
+data <- read_csv('output/data_pull_20251202.csv')  %>%
+  mutate(TADA.CharacteristicName = ifelse(TADA.CharacteristicName == '1-HEPTANESULFONIC ACID, 1,1,2,2,3,3,4,4,5,5,6,6,7,7,7-PENTADECAFLUORO-',
+                                          'PERFLUOROHEPTANESULFONATE', TADA.CharacteristicName)) %>%
+  mutate(Abbrev.Name = case_when(TADA.CharacteristicName == "PERFLUORODECANESULFONATE" ~ "PFDS",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANESULFONAMIDE" ~ "PFOSA",
+                                 TADA.CharacteristicName == "PERFLUOROHEPTANESULFONATE" ~ "PFHpS",
+                                 TADA.CharacteristicName == "HEXAFLUOROPROPYLENE OXIDE DIMER ACID" ~ "GenX",
+                                 TADA.CharacteristicName == "PERFLUOROUNDECANOIC ACID" ~ "PFUnA",
+                                 TADA.CharacteristicName == "PERFLUORODODECANOIC ACID" ~ "PFDoA",
+                                 TADA.CharacteristicName == "PERFLUOROOCTANOIC ACID" ~ "PFOA",
+                                 TADA.CharacteristicName == "PERFLUORODECANOIC ACID" ~ "PFDA",
+                                 TADA.CharacteristicName == "PERFLUOROBUTANESULFONIC ACID" ~ "PFBS",
+                                 TADA.CharacteristicName == "PERFLUORONONANOIC ACID" ~ "PFNA",
+                                 TADA.CharacteristicName == "PERFLUOROTETRADECANOIC ACID" ~ "PFTeDA",
+                                 TADA.CharacteristicName == "PERFLUOROTRIDECANOIC ACID" ~ "PFTrDA",
+                                 TADA.CharacteristicName == "PERFLUOROHEXANESULFONATE" ~ "PFHxS",
+                                 TADA.CharacteristicName == "HEXAFLUOROPROPYLENE OXIDE-DIMER ACID" ~ "GenX",
                                  TADA.CharacteristicName == "PERFLUOROOCTANESULFONATE (PFOS)" ~ "PFOS",
                                  TADA.CharacteristicName == "PERFLUOROOCTANESULFONATE" ~ "PFOS",
-                                 TADA.CharacteristicName == "PERFLUOROOCTANE SULFONIC ACID" ~ "PFOS"))
+                                 TADA.CharacteristicName == "PERFLUOROBUTANOIC ACID" ~ "PFBA",
+                                 TADA.CharacteristicName == "PERFLUOROHEXANOIC ACID" ~ "PFHxA",
+                                 TADA.CharacteristicName == "PERFLUOROPENTANOIC ACID" ~ "PFPeA",
+                                 TADA.CharacteristicName == "PFOA ION" ~ "PFOA",
+                                 TADA.CharacteristicName == "PERFLUOROHEPTANOIC ACID" ~ "PFHpA"),
+         Abbrev.Name = factor(Abbrev.Name, levels = c('PFOA', 'PFOS', 'PFNA',
+                                                      'PFDA', 'PFBS', 'PFHxS',
+                                                      'PFUnA', 'PFDoA', 'PFTrDA',
+                                                      'PFTeDA', 'PFHpS', 'PFDS',
+                                                      'PFOSA', 'GenX', 'PFBA',
+                                                      'PFHxA', 'PFPeA', "PFHpA"),
+                              ordered = T))
 
 data_media_sums <- data %>%
   group_by(Abbrev.Name) %>%
@@ -347,7 +372,7 @@ summary(as.factor(data_18$EPA_method_flag))
 summary(data_18$TADA.DetectionQuantitationLimitMeasure.MeasureValue)
 
 ####Export data with flags####
-write_csv(data_18, 'output/EPATADA_Original_data_with_flags_tags.csv')
+write_csv(data_18, 'output/EPATADA_Original_data_with_flags_tags_20251202.csv')
 
 #Find non-detect detection limit range
 summary(subset(data_18$TADA.DetectionQuantitationLimitMeasure.MeasureValue,
@@ -382,7 +407,7 @@ samples_filtered <- data_18 %>%
   filter(TADA.MeasureQualifierCode.Flag != 'Suspect' | is.na(TADA.MeasureQualifierCode.Flag))
 
 #Export filtered data
-write_csv(samples_filtered, 'output/EPATADA_priority_filtered_data.csv')
+write_csv(samples_filtered, 'output/EPATADA_priority_filtered_data_20251202.csv')
 
 
 ####Filtered Map####
@@ -454,3 +479,4 @@ ggplot() +
 
 
 ggsave('output/figures/scatterpie_map_water_tissue_filtered.jpg', units = 'in', width = 6, height = 6, dpi = 500)
+
