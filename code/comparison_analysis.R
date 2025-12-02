@@ -96,3 +96,6 @@ ggplot(data = combo_filt, aes(x = source, y = Result, fill = source)) +
   theme(legend.position = 'none',
         strip.background = element_rect(fill="#fbf6ef"))
 
+ggsave('output/NARS_figures/wqp_vs_nars_boxplot.jpg', units = 'in',
+       dpi = 300, width = 12, height = 6)
+
