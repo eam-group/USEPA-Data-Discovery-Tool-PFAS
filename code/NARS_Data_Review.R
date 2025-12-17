@@ -3,7 +3,7 @@
 
 #Written by: Matt Dunn (Tetra Tech) & Hannah Ferriby (Tetra Tech)
 #Date created: 6/24/25
-#Date updated: 11/5/25
+#Date updated: 12/16/25
 
 library(tidyverse)
 library(readxl)
@@ -163,70 +163,80 @@ summary_samples_tot <- combined_data2 %>%
 #pfos acute - 71 ug/L
 #pfos chronic - 0.25 ug/L
 
-#To make acute/chronic lines only appear over their specific analyte
-#Define thresholds per analyte
-thresholds <- data.frame(
-  Analyte = c("PFOA", "PFOA", "PFOS", "PFOS", 'PFBA', 'PFHxA', 'PFNA', 'PFDA',
-              'PFBS', 'PFHxS'),
-  Type = c("Acute", "Chronic", "Acute", "Chronic", 'Benchmark', 'Benchmark'
-           , 'Benchmark', 'Benchmark', 'Benchmark', 'Benchmark'),
-  Threshold = c(3100000, 100000, 71000, 250, 5300000, 4800000, 650000,
-                500000, 5000000, 210000)
-  )
+#To make acute/chronic lines only appear over their specific analyte #Define thresholds per analyte 
+thresholds <- data.frame(Analyte = c("PFOA", "PFOA", "PFOS", "PFOS",
+                                      'PFBA', 'PFHxA', 'PFNA', 'PFDA',
+                                      'PFBS', 'PFHxS'),
+                          Type = c("Acute", "Chronic", "Acute", "Chronic",
+                                   'Benchmark', 'Benchmark' , 'Benchmark',
+                                   'Benchmark', 'Benchmark', 'Benchmark'),
+                          Threshold = c(3100000, 100000, 71000, 250, 5300000,
+                                        4800000, 650000, 500000, 5000000, 210000)) 
 
-thresholds$x <- as.numeric(factor(thresholds$Analyte))
-thresholds$xmin <- thresholds$x - 0.3  # boxplot default width is 0.6
+thresholds$x <- as.numeric(factor(thresholds$Analyte)) 
+thresholds$xmin <- thresholds$x - 0.3 # boxplot default width is 0.6 
 thresholds$xmax <- thresholds$x + 0.3
+
+# Ensure the x-axis order is lower, middle, upper
 
 Cwater_4_plots <- Cwater_analysis %>%
   filter(!is.na(Cwater)) %>%
-  pivot_longer(cols = c(Cwater, Cwater_upper, Cwater_lower)) %>%
-  left_join(thresholds, by = 'Analyte') %>%
-  mutate(Analyte = factor(Analyte,
-                          levels = c('PFBA', 'PFPeA', 'PFHpA', 'PFOA', 'PFNA',
-                                     'PFDA', 'PFUnA', 'PFDoA', 'PFTrDA', 'PFTeDA',
-                                     'PFHxS', 'PFHpS', 'PFOS', 'PFOSA')))
+  pivot_longer(cols = c(Cwater, Cwater_upper, Cwater_lower),
+               names_to = "name", values_to = "value") %>%
+  left_join(thresholds, by = "Analyte") %>%
+  mutate(
+    name = factor(name, levels = cwater_levels),
+    Analyte = factor(Analyte,
+                     levels = c('PFBA', 'PFPeA', 'PFHpA', 'PFOA', 'PFNA',
+                                'PFDA', 'PFUnA', 'PFDoA', 'PFTrDA', 'PFTeDA',
+                                'PFHxS', 'PFHpS', 'PFOS', 'PFOSA')
+    )
+  ) %>%
+  mutate(name = case_when(name == "Cwater_lower" ~
+                            "Mean BAF+SD",
+                          name == "Cwater_upper" ~
+                            "Mean BAF-SD",
+                          T ~ "Mean BAF"),
+         name = factor(name, levels = c("Mean BAF+SD", "Mean BAF", "Mean BAF-SD")))
 
-paste0("Cwater values exceed criteria/benchmarks ",
-       nrow(filter(Cwater_4_plots, value>Threshold & name == 'Cwater')),
-       " time(s)")
 
-paste0("Cwater_upper values exceed criteria/benchmarks ",
-       nrow(filter(Cwater_4_plots, value>Threshold & name == 'Cwater_upper')),
-       " time(s)")
-
-cwater_name_list <- c(
-  'Cwater_lower' = 'Cwater Lower',
-  'Cwater' = 'Cwater',
-  'Cwater_upper' = 'Cwater Upper'
-)
-
-ggplot() + 
-  #boxplot of detected samples
-  geom_boxplot(data = Cwater_4_plots,
-               aes(x = Analyte, y = value)) +
-  geom_segment(data = Cwater_4_plots, 
+ggplot(Cwater_4_plots, aes(x = Analyte, y = value)) +
+  geom_boxplot(
+    aes(fill = name),
+    position = position_dodge(width = 0.7),
+    width = 0.6
+  ) + 
+  geom_segment(data = Cwater_4_plots,
                aes(x = as.numeric(Analyte) - 0.3,
                    xend = as.numeric(Analyte) + 0.3,
-                   y = Threshold, yend = Threshold,
+                   y = Threshold,
+                   yend = Threshold,
                    color = Type),
-                 linetype = "solid", size = 0.8) + 
-  scale_y_log10(labels = label_comma(drop0trailing = TRUE),
-                breaks = c(0.00001, 0.001, 0.1,  10,
-                           1000, 100000, 10000000)) + 
-  ylab('Estimated Value (ng/L)') + 
-  facet_wrap(~name, nrow = 3, labeller = as_labeller(cwater_name_list)) + 
+               size = 1) +
+  scale_y_log10(
+    labels = label_comma(drop0trailing = TRUE),
+    breaks = c(0.00001, 0.001, 0.1, 10, 1000, 100000, 10000000)
+  ) +
+  ylab("Estimated Value (ng/L)") +
+  xlab(NULL) +
+  # facet_wrap(~Analyte, scales = "free_y", nrow = 7) +
   theme_bw() +
-  scale_color_manual(name = 'Threshold', values = c("Acute" = "#fac748",
-                                                    "Chronic" = "#8390fa",
-                                                    "Benchmark" = "#1d2f6f"),
-                     na.translate = F) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        strip.background =element_rect(fill="#fbf6ef"),
-        legend.position = 'top')
+  scale_color_manual(
+    name = "Threshold",
+    values = c("Acute" = "#fac748",
+               "Chronic" = "#8390fa",
+               "Benchmark" = "#1d2f6f"),
+    na.translate = FALSE
+  ) +
+  scale_fill_manual(name = "Bound",values = c("#f4f1de", "#8d99ae", "#3d405b")) + 
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.background = element_rect(fill = "#fbf6ef"),
+    legend.position = "top"
+  )
 
-ggsave('output/NARS_figures/Cwater_threshold_boxplots.jpg', units = 'in',
-       height = 7, width = 6, dpi = 300)
+ggsave("output/NARS_figures/Cwater_threshold_boxplots.jpg",
+       units = "in", height = 6, width = 9, dpi = 300)
 
 
 #####Comparison#####
@@ -281,7 +291,7 @@ ggplot() +
   geom_sf(data = data_4_maps, aes(fill = n),
           color = 'black') + 
   theme_bw() +
-  scale_fill_continuous(name = 'Total Number of\n Fish Samples',
+  scale_fill_continuous(name = 'Total Number of PFAS\nObservations Reported',
                         palette = c("#1d2f6f","#8390fa", "#fac748")) +
   theme(legend.position = 'top')
 
@@ -302,7 +312,8 @@ data_4_maps2 <- combined_data2 %>%
           Analyte = Analyte,
           value = mean(Amount, na.rm = T)) %>%
   unique() %>%
-  st_as_sf() 
+  st_as_sf()
+
 
 ggplot() +
   geom_sf(data = states, fill = 'gray', color = 'black') + 
@@ -324,9 +335,8 @@ ggsave('output/NARS_figures/avg_samples_map.jpg', units = 'in',
 
 #Average predicted Cwater by state
 data_4_maps3 <- Cwater_analysis %>%
-  filter(Analyte %in% c('PFBA', 'PFPeA', 'PFHpA', 'PFOA', 'PFNA',
-                        'PFDA', 'PFUnA', 'PFDoA', 'PFTrDA', 'PFTeDA',
-                        'PFHxS', 'PFHpS', 'PFOS', 'PFOSA')) %>%
+  filter(Analyte %in% c('PFBA', 'PFHpA', 'PFOA', 'PFNA',
+                        'PFHxS','PFDA','PFOS', 'PFPeA')) %>%
   left_join(states, by = c('State' = 'STUSPS')) %>%
   group_by(State, Analyte) %>%
   reframe(State = State,
@@ -336,12 +346,30 @@ data_4_maps3 <- Cwater_analysis %>%
   unique() %>%
   st_as_sf() 
 
+data_4_maps3_1 <- Cwater_analysis %>%
+  filter(Analyte %in% c( 'PFUnA', 'PFDoA', 'PFTrDA',
+                        'PFTeDA', 'PFHpS', 'PFOSA')) %>%
+  left_join(states, by = c('State' = 'STUSPS')) %>%
+  group_by(State, Analyte) %>%
+  reframe(State = State,
+          geometry = geometry,
+          Analyte = Analyte,
+          value = mean(Cwater, na.rm = T)) %>%
+  unique() %>%
+  st_as_sf() 
+
+data_4_maps_3_export <- data_4_maps3 %>%
+  rbind(data_4_maps3_1) %>%
+  st_drop_geometry()
+
+write_csv(data_4_maps_3_export, 'output/cwater_avg_by_state.csv')
+
 ggplot() +
-  geom_sf(data = states, fill = 'gray', color = 'black') + 
+  geom_sf(data = states, fill = 'gray', color = 'black', size = 0.5) + 
   geom_sf(data = data_4_maps3, aes(fill = value),
           color = 'black') + 
   theme_bw() +
-  facet_wrap(~Analyte, nrow = 7) +
+  facet_wrap(~Analyte, nrow = 4) +
   scale_fill_continuous(name = 'Average Cwater\nEstimation (ng/L)',
                         palette = c("#1d2f6f","#8390fa", "#fac748"),
                         na.value = 'gray',
@@ -349,10 +377,27 @@ ggplot() +
   theme(legend.position = 'top',
         strip.background = element_rect(fill="#fbf6ef"),
         axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.text = element_text(angle = 45, hjust = 1))
+        legend.text = element_text(angle = 45, hjust = 1)) -> a
 
-ggsave('output/NARS_figures/avg_estimated_map.jpg', units = 'in',
-       height = 9, width = 6.5, dpi = 300)
+ggplot() +
+  geom_sf(data = states, fill = 'gray', color = 'black', size = 0.5) + 
+  geom_sf(data = data_4_maps3_1, aes(fill = value),
+          color = 'black') + 
+  theme_bw() +
+  facet_wrap(~Analyte, nrow = 3) +
+  scale_fill_continuous(name = 'Average Cwater\nEstimation (ng/L)',
+                        palette = c("#1d2f6f","#8390fa", "#fac748"),
+                        na.value = 'gray',
+                        trans = "log10") +
+  theme(legend.position = 'top',
+        strip.background = element_rect(fill="#fbf6ef"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.text = element_text(angle = 45, hjust = 1)) -> b
+
+ggarrange(a,b,nrow=1) -> c
+
+ggsave('output/NARS_figures/avg_estimated_map.jpg', c, units = 'in',
+       height = 6.5, width = 8, dpi = 300)
 
 
 ####**OLD**####
